@@ -1,0 +1,9 @@
+include LICENSE
+include Makefile
+include README.md
+include requirements-dev.txt
+include requirements.txt
+
+recursive-include tests *.py resources/*
+
+recursive-exclude tests *.pyc
