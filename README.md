@@ -4,13 +4,7 @@ A collection of best practices for a simple and informative README.
 
 ## Installation
 
-Download to your project directory, add it, and commit.
-
-```sh
-curl -O https://github.com/christianbundy/readme-boilerplate.md
-git add README.md
-git commit -m "Add README Boilerplate"
-```
+Duh.
 
 ## Usage
 
