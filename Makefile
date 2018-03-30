@@ -34,3 +34,6 @@ distclean: clean
 .PHONY:
 mostlyclean: clean distclean
 	rm -rf "$(VENV_DIR)"
+
+run:
+	. "$(VENV_DIR)"/bin/activate; python -m flubber
