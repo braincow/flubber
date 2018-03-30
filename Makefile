@@ -10,7 +10,7 @@ all: install
 $(VENV_DIR): requirements-dev.txt
 	$(VENV) $(VENV_ARGS) "$(VENV_DIR)"
 	"$(VENV_DIR)"/bin/pip install -U setuptools wheel pip
-	"$(VENV_DIR)"/bin/pip install -Ur $<
+	. "$(VENV_DIR)"/bin/activate; "$(VENV_DIR)"/bin/pip install -Ur $<
 
 .PHONY: env
 env: $(VENV_DIR)

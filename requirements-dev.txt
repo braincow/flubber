@@ -1,1 +1,10 @@
+# vext is required to map hosts libraries to virtualenv
+vext
+vext.gi
+
+# watson is required because, well, we are a fronted for it
+td-watson
+
+# automated software testing
+tox
 pytest
