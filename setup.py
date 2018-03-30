@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # name
-APP='app'
+APP='flubber'
 
 from os.path import join
 
@@ -38,22 +38,30 @@ def parse_requirements(requirements, ignore=('setuptools',)):
 setup(
     name=APP,
     version=pkg['version'],
-    description='Description of this application!',
+    description='Flubber is a GTK+ 3 frontend for Watson timetracker',
     packages=[APP],
-    author='Your Name Here',
-    author_email='your.email@address.here',
+    author='Antti Peltonen',
+    author_email='antti.peltonen@iki.fi',
     license='MIT',
     long_description=readme,
     install_requires=parse_requirements('requirements.txt'),
     tests_require=parse_requirements('requirements-dev.txt'),
     entry_points={
         'console_scripts': [
-            'app = app.__main__:app',
+            'flubber = flubber.__main__:gui',
         ]
     },
     classifiers=[
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        "License :: OSI Approved :: MIT License"
+        "Development Status :: 1 - Planning",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.6",
+        "Operating System :: POSIX",
+        "Intended Audience :: Customer Service",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Other Audience"
     ],
-    keywords='fuu bar',
+    keywords='flubber watson gtk time-tracking time tracking',
 )
