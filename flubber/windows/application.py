@@ -3,6 +3,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gio, Gtk
 
+from watson import Watson
+import arrow
+
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
     def __init__(self, *args, **kwargs):

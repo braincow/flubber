@@ -2,7 +2,7 @@ PYTHON ?= python
 PIP ?= pip
 
 VENV = virtualenv
-VENV_ARGS = -p $(PYTHON)
+VENV_ARGS = -p $(PYTHON)3
 VENV_DIR = $(CURDIR)/.venv
 
 all: install
