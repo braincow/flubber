@@ -1,9 +1,9 @@
+# add all non package related material
 include LICENSE
 include Makefile
 include README.md
 include requirements-dev.txt
 include requirements.txt
 
-recursive-include tests *.py resources/*
-
-recursive-exclude tests *.pyc
+# add all runtime required files into install package
+recursive-include flubber *.xml
