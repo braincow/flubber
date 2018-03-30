@@ -9,8 +9,7 @@ all: install
 
 $(VENV_DIR): requirements-dev.txt
 	$(VENV) $(VENV_ARGS) "$(VENV_DIR)"
-	"$(VENV_DIR)"/bin/pip install -U setuptools wheel pip
-	. "$(VENV_DIR)"/bin/activate; "$(VENV_DIR)"/bin/pip install -Ur $<
+	. "$(VENV_DIR)"/bin/activate; export PYTHONPATH="$(VENV_DIR)"; "$(VENV_DIR)"/bin/pip install -r $<
 
 .PHONY: env
 env: $(VENV_DIR)
@@ -18,11 +17,6 @@ env: $(VENV_DIR)
 .PHONY: install
 install:
 	$(PYTHON) setup.py install
-
-.PHONY: install-dev
-install-dev:
-	$(PIP) install -r requirements-dev.txt
-	$(PYTHON) setup.py develop
 
 .PHONY: check
 check: clean
@@ -40,8 +34,3 @@ distclean: clean
 .PHONY:
 mostlyclean: clean distclean
 	rm -rf "$(VENV_DIR)"
-
-.PHONY: docs
-docs: install-dev
-	$(PYTHON) scripts/gen-cli-docs.py
-	mkdocs build
