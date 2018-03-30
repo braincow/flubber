@@ -1,34 +1,14 @@
 import sys
 import os
 import gi
+import signal
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gio, Gtk
 
-class AppWindow(Gtk.ApplicationWindow):
+from flubber.windows import FlubberAppWindow
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # This will be in the windows group and have the "win" prefix
-        max_action = Gio.SimpleAction.new_stateful("maximize", None,
-                                           GLib.Variant.new_boolean(False))
-        max_action.connect("change-state", self.on_maximize_toggle)
-        self.add_action(max_action)
-
-        # Keep it in sync with the actual state
-        self.connect("notify::is-maximized",
-                            lambda obj, pspec: max_action.set_state(
-                                               GLib.Variant.new_boolean(obj.props.is_maximized)))
-
-    def on_maximize_toggle(self, action, value):
-        action.set_state(value)
-        if value.get_boolean():
-            self.maximize()
-        else:
-            self.unmaximize()
-
-class Application(Gtk.Application):
+class FlubberApp(Gtk.Application):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, application_id="fi.iki.bcow.flubber",
@@ -52,7 +32,7 @@ class Application(Gtk.Application):
         if not self.window:
             # Windows are associated with the application
             # when the last one is closed the application shuts down
-            self.window = AppWindow(application=self, title="Main Window")
+            self.window = FlubberAppWindow(application=self, title="Flubber")
 
         self.window.present()
 
@@ -60,7 +40,9 @@ class Application(Gtk.Application):
         self.quit()
 
 def main():
-    app = Application()
+    app = FlubberApp()
+    # bind SIGINT (CTRL+C) to app quit
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, app.quit)
     return app.run(sys.argv)
 
 if __name__ == "__main__":
