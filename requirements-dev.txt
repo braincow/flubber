@@ -6,6 +6,12 @@ vext.gi
 td-watson
 
 # automated software testing and code quality
-tox
-pytest
 pylint
+flake8
+mock
+py
+pytest
+pytest-datafiles
+pytest-mock
+pytest-runner
+tox

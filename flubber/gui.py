@@ -1,12 +1,9 @@
 import sys
 import os
-import gi
 import signal
-
-gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gio, Gtk
-
 from flubber.windows import FlubberAppWindow
+
 
 class FlubberApp(Gtk.Application):
 
@@ -39,11 +36,13 @@ class FlubberApp(Gtk.Application):
     def on_quit(self, action, param):
         self.quit()
 
+
 def main():
     app = FlubberApp()
     # bind SIGINT (CTRL+C) to app quit
     GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, app.quit)
     return app.run(sys.argv)
+
 
 if __name__ == "__main__":
     sys.exit(main)

@@ -20,7 +20,7 @@ install:
 
 .PHONY: check
 check: clean
-	$(PYTHON) setup.py test
+	. "$(VENV_DIR)"/bin/activate; tox
 
 .PHONY: clean
 clean:
