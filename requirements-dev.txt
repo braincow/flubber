@@ -5,6 +5,7 @@ vext.gi
 # watson is required because, well, we are a fronted for it
 td-watson
 
-# automated software testing
+# automated software testing and code quality
 tox
 pytest
+pylint
