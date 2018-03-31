@@ -4,7 +4,7 @@ from watson.utils import sorted_groupby, format_timedelta
 import arrow
 import operator
 from functools import reduce
-
+from flubber.dialogs import WatsonAddDialog
 
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
@@ -109,7 +109,16 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         pass
 
     def on_add_button_clicked(self, button):
-        pass
+        dia = WatsonAddDialog(self)
+        response = dia.run()
+
+        if response == Gtk.ResponseType.OK:
+            print("OK clicked in dialog")
+            project = dia.project_combo.get_child().get_text()
+        elif response == Gtk.ResponseType.CANCEL:
+            print("Cancel clicked in dialog")
+
+        dia.destroy()
 
     def on_maximize_toggle(self, action, value):
         action.set_state(value)
