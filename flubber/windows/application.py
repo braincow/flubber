@@ -51,7 +51,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
         # the cellrenderer for the column - text
         renderer_days = Gtk.CellRendererText()
-        # the column is created
+        # the column is created (note to self:
+        #  text= actually indicates the list position
+        #  from store.append(...))
         column_days = Gtk.TreeViewColumn(
             "Projects by day", renderer_days, text=0)
         # and it is appended to the treeview
@@ -105,6 +107,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             operator.attrgetter('day'), reverse=True
             )
 
+        # the magic of the store is as follows:
+        #  day (branch node) and project name (leaf) can share
+        #  same first element
         self.store = Gtk.TreeStore(str, str, str, str)
         for i, (day, frames) in enumerate(frames_by_day):
             # convert itertools grouper object into list first
@@ -115,9 +120,13 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 operator.add,
                 (frame.stop - frame.start for frame in frames)
             ))
+            # piter refers to branch, use it to add leaf later (see below)
+            #  all other entries are None, including top branch as we have none
             piter = self.store.append(None, [day, daily_total, None, None])
             for frame in frames:
                 tags = ', '.join(frame.tags)
+                # here under branch (piter) we add a leaf
+                #  see TreeStore definition above for field count
                 self.store.append(piter,
                                   [frame.project,
                                    format_timedelta(frame.stop - frame.start),
