@@ -38,6 +38,22 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         self.reload_button.connect("clicked", self.on_reload_button_clicked)
         self.hb.pack_end(self.reload_button)
 
+        # button to add a frame
+        self.add_button = Gtk.Button()
+        icon = Gio.ThemedIcon(name="document-new")
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        self.add_button.add(image)
+        self.add_button.connect("clicked", self.on_add_button_clicked)
+        self.hb.pack_end(self.add_button)
+
+        # button to track project
+        self.track_button = Gtk.ToggleButton()
+        icon = Gio.ThemedIcon(name="media-record")
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        self.track_button.add(image)
+        self.track_button.connect("toggled", self.on_track_button_toggled)
+        self.hb.pack_start(self.track_button)
+
         # assign grid to the window for element placement
         grid = Gtk.Grid()
         grid.set_column_homogeneous(True)
@@ -89,6 +105,12 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # on first load show watson data
         self.reload_watson_data()
 
+    def on_track_button_toggled(self, button):
+        pass
+
+    def on_add_button_clicked(self, button):
+        pass
+
     def on_maximize_toggle(self, action, value):
         action.set_state(value)
         if value.get_boolean():
@@ -97,6 +119,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             self.unmaximize()
 
     def on_reload_button_clicked(self, button):
+        # update model
         self.reload_watson_data()
 
     def reload_watson_data(self):
@@ -135,3 +158,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
         # update treeview with the new model
         self.view.set_model(self.store)
+
+        # check if watson is running and change toggle button state based on that
+        if wat.is_started:
+            self.track_button.set_active(True)
+        else:
+            self.track_button.set_active(False)
