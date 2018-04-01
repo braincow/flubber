@@ -1,3 +1,3 @@
-from .application import WatsonAddDialog
+from .application import FlubberFrameDialog
 
-__all__ = ['WatsonAddDialog']
+__all__ = ['FlubberFrameDialog']

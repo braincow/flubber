@@ -4,7 +4,7 @@ from watson.utils import sorted_groupby, format_timedelta
 import arrow
 import operator
 from functools import reduce
-from flubber.dialogs import WatsonAddDialog
+from flubber.dialogs import FlubberFrameDialog
 
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
@@ -47,12 +47,13 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         self.hb.pack_end(self.add_button)
 
         # button to track project
-        self.track_button = Gtk.ToggleButton()
-        icon = Gio.ThemedIcon(name="media-record")
-        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-        self.track_button.add(image)
-        self.track_button.connect("toggled", self.on_track_button_toggled)
+        self.track_button = Gtk.Switch()
+        #self.track_button.connect("notify::active", self.on_switch_activated)
         self.hb.pack_start(self.track_button)
+
+        # Label to show tracking status
+        self.track_status_label = Gtk.Label("Idle.")
+        self.hb.pack_start(self.track_status_label)
 
         # assign grid to the window for element placement
         grid = Gtk.Grid()
@@ -105,18 +106,18 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # on first load show watson data
         self.reload_watson_data()
 
-    def on_track_button_toggled(self, button):
-        pass
-
     def on_add_button_clicked(self, button):
-        dia = WatsonAddDialog(self)
+        dia = FlubberFrameDialog(self)
         response = dia.run()
 
         if response == Gtk.ResponseType.OK:
             print("OK clicked in dialog")
             project = dia.project_combo.get_child().get_text()
+            print(project)
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked in dialog")
+        elif response == Gtk.ResponseType.DELETE_EVENT:
+            print("Dialog was closed")
 
         dia.destroy()
 
@@ -171,5 +172,11 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # check if watson is running and change toggle button state based on that
         if wat.is_started:
             self.track_button.set_active(True)
+            status_text = "{} {} {}".format(
+                                            wat.current["project"],
+                                            ', '.join(wat.current["tags"]),
+                                            wat.current['start'].humanize())
+            self.track_status_label.set_text(status_text)
         else:
             self.track_button.set_active(False)
+            self.track_status_label.set_text("Idle.")
