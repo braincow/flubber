@@ -362,10 +362,14 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 # here under branch (piter) we add a leaf
                 #  see TreeStore definition above for field count
                 # Watson uses in its TUI seven char length IDs; do the same
+                clock_text = '{:HH:mm} to {:HH:mm} ({})'.format(
+                                                    frame.start,
+                                                    frame.stop,
+                                                    format_timedelta(frame.stop - frame.start))
                 self.store.append(piter,
                                   [frame.id[:7],
                                    frame.project,
-                                   format_timedelta(frame.stop - frame.start),
+                                   clock_text,
                                    tags,
                                    False])
 
