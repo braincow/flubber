@@ -8,3 +8,9 @@ def arrow_parse_datetime(value):
     # timezone, not in UTC. Watson Cf issue #16.
     date.tzinfo = tz.tzlocal()
     return date
+
+def beautify_tags(tag_list):
+    if len(tag_list) > 0:
+        return " [{}]".format(','.join(tag_list))
+    else:
+        return ""

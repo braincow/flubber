@@ -6,7 +6,7 @@ import operator
 from functools import reduce
 from flubber.dialogs import FlubberAddFrameDialog, FlubberStartFrameDialog
 from flubber.dialogs.util import flubber_error_dialog, flubber_warning_dialog, flubber_info_dialog
-
+from flubber.util import beautify_tags
 
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
@@ -147,9 +147,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 return
             # stop the job
             frame = wat.stop()
-            message = "Stopped project {} {}, started {}.".format(
+            message = "Stopped project {}{}, started {}.".format(
                                                                 frame.project,
-                                                                ', '.join(frame.tags),
+                                                                beautify_tags(frame.tags),
                                                                 frame.start.humanize())
             try:
                 # save the state files
@@ -176,9 +176,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 [ selected_tags.append(row[0]) for row in dia.selected_tag_store ]
                 # start new watson entry
                 current = wat.start(project, selected_tags, restart=False)
-                message = "Starting project {} {}, started {}.".format(
+                message = "Starting project {}{}, started {}.".format(
                                                                       project,
-                                                                      ', '.join(selected_tags),
+                                                                      beautify_tags(selected_tags),
                                                                       current["start"].humanize())
 
                 # close dialog in case we hit a error and return before standard cleanup in the end
@@ -220,9 +220,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                tags=selected_tags,
                                from_date=start_date,
                                to_date=end_date)
-            message = "Adding project {} {}, started {} and stopped {}.".format(
+            message = "Adding project {}{}, started {} and stopped {}.".format(
                                                                                frame.project,
-                                                                               ', '.join(selected_tags),
+                                                                               beautify_tags(frame.tags),
                                                                                frame.start.humanize(),
                                                                                frame.stop.humanize())
             # close dialog in case we hit a error and return before standard cleanup in the end
@@ -302,9 +302,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # check if watson is running and change toggle button state based on that
         if wat.is_started:
             self.track_button.set_active(True)
-            status_text = "{} {} {}".format(
+            status_text = "{}{} {}".format(
                                             wat.current["project"],
-                                            ', '.join(wat.current["tags"]),
+                                            beautify_tags(wat.current["tags"]),
                                             wat.current['start'].humanize())
             self.track_status_label.set_text(status_text)
         else:
