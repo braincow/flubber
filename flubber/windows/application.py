@@ -48,7 +48,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
         # button to track project
         self.track_button = Gtk.Switch()
-        #self.track_button.connect("notify::active", self.on_switch_activated)
+        # use button-press-event instead of notify::active so that
+        #  state changes from elsewhere in code do not trigger this
+        self.track_button.connect("button-press-event", self.on_track_switch_clicked)
         self.hb.pack_start(self.track_button)
 
         # Label to show tracking status
@@ -72,27 +74,37 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         #  text= actually indicates the list position
         #  from store.append(...))
         column_days = Gtk.TreeViewColumn(
-            "Projects by day", renderer_days, text=0)
+            "Frames by day", renderer_days, text=0)
         # and it is appended to the treeview
         self.view.append_column(column_days)
+
+        # cellrender for project name
+        rendered_project = Gtk.CellRendererText()
+        column_project = Gtk.TreeViewColumn(
+            "Project", rendered_project, text=1)
+        self.view.append_column(column_project)
 
         # cellrender for project/day length
         rendered_length = Gtk.CellRendererText()
         column_length = Gtk.TreeViewColumn(
-            "Project / day length", rendered_length, text=1)
+            "Project / day length", rendered_length, text=2)
         self.view.append_column(column_length)
 
         # cellrender for project tags
         rendered_tags = Gtk.CellRendererText()
         column_tags = Gtk.TreeViewColumn(
-            "Project tags", rendered_tags, text=2)
+            "Project tags", rendered_tags, text=3)
         self.view.append_column(column_tags)
 
         # cellrender for project start time
         rendered_start = Gtk.CellRendererText()
         column_start = Gtk.TreeViewColumn(
-            "Project start time", rendered_start, text=3)
+            "Project start time", rendered_start, text=4)
         self.view.append_column(column_start)
+
+        # grab click to list item
+        select = self.view.get_selection()
+        select.connect("changed", self.on_tree_selection_changed)
 
         # create scrollable window and place tree view inside it
         scrollable_treelist = Gtk.ScrolledWindow()
@@ -105,6 +117,56 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
         # on first load show watson data
         self.reload_watson_data()
+
+    def on_tree_selection_changed(self, selection):
+        # user clicked an entry on the tree
+        model, treeiter = selection.get_selected()
+        if treeiter is not None:
+            print(model[treeiter][0])
+
+    def on_track_switch_clicked(self, switch, gparam):
+        wat = Watson()
+        print(switch.get_active())
+        if switch.get_active():
+            # we are stopping a running watson job
+            if not wat.is_started:
+                # for some reason Watson disagrees
+                dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
+                    Gtk.ButtonsType.CANCEL, "No project started")
+                dialog.format_secondary_text(
+                    "No project currently started. Did you stop the project from command line instead?")
+                dialog.run()
+                dialog.destroy()
+                # return here so that main gui is again active
+                return
+            # stop the job
+            frame = wat.stop()
+            message = "Stopped project {} {}, started {}.".format(
+                                                                frame.project,
+                                                                ', '.join(frame.tags),
+                                                                frame.start.humanize())
+            try:
+                # save the state files
+                wat.save()
+            except Exception as e:
+                # oh no, error while saving state files
+                dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
+                    Gtk.ButtonsType.CANCEL, "Error while saving state files")
+                dialog.format_secondary_text(e)
+                dialog.run()
+                dialog.destroy()
+                # return here so that main gui is again active
+                return
+                
+            # show user info about the job just stopped
+            dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
+                Gtk.ButtonsType.OK, "Project stopped")
+            dialog.format_secondary_text(message)
+            dialog.run()
+            dialog.destroy()
+
+            # and finally update watson status to main view
+            self.reload_watson_data()
 
     def on_add_button_clicked(self, button):
         dia = FlubberFrameDialog(self)
@@ -143,7 +205,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # the magic of the store is as follows:
         #  day (branch node) and project name (leaf) can share
         #  same first element
-        self.store = Gtk.TreeStore(str, str, str, str)
+        self.store = Gtk.TreeStore(str, str, str, str, str)
         for i, (day, frames) in enumerate(frames_by_day):
             # convert itertools grouper object into list first
             #  https://stackoverflow.com/questions/44490079/how-to-turn-an-itertools-grouper-object-into-a-list#44490269
@@ -155,13 +217,14 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             ))
             # piter refers to branch, use it to add leaf later (see below)
             #  all other entries are None, including top branch as we have none
-            piter = self.store.append(None, [day, daily_total, None, None])
+            piter = self.store.append(None, [day, "-", daily_total, None, None])
             for frame in frames:
                 tags = ', '.join(frame.tags)
                 # here under branch (piter) we add a leaf
                 #  see TreeStore definition above for field count
                 self.store.append(piter,
-                                  [frame.project,
+                                  [frame.id[:7],
+                                   frame.project,
                                    format_timedelta(frame.stop - frame.start),
                                    tags,
                                    str(frame.start)])
