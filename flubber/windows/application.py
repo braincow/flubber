@@ -4,7 +4,7 @@ from watson.utils import sorted_groupby, format_timedelta, get_frame_from_argume
 import arrow
 import operator
 from functools import reduce
-from flubber.dialogs import FlubberAddFrameDialog, FlubberStartFrameDialog
+from flubber.dialogs import FlubberAddFrameDialog, FlubberStartFrameDialog, FlubberEditFrameDialog
 from flubber.dialogs.util import flubber_error_dialog, flubber_warning_dialog, flubber_info_dialog, flubber_confirm_dialog
 from flubber.util import beautify_tags
 
@@ -194,10 +194,46 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         if ":" in str(treepath):
             model, treeiter = treeview.get_selection().get_selected()
             if treeiter is not None:
-                #wat = Watson()
-                #frame = get_frame_from_argument(wat, model[treeiter][0])
-                # TODO: edit frame in a dialog
-                pass
+                wat = Watson()
+                frame = get_frame_from_argument(wat, model[treeiter][0])
+                # edit frame in a dialog
+                dia = FlubberEditFrameDialog(self, frame)
+                response = dia.run()
+                if response == Gtk.ResponseType.OK:
+                    # collect values from dialog
+                    project = dia.project_combo.get_child().get_text()
+                    selected_tags = list()
+                    [ selected_tags.append(row[0]) for row in dia.selected_tag_store ]
+                    start_date = dia.parsed_start_datetime
+                    end_date = dia.parsed_end_datetime
+                    # update frame and do watson save
+                    wat.frames[frame.id] = (project, start_date, end_date, selected_tags)
+                    message = "Edited project {}{}, from {} to {}.".format(
+                                                                        project,
+                                                                        beautify_tags(selected_tags),
+                                                                        start_date.humanize(),
+                                                                        end_date.humanize())
+                    try:
+                        # save the state files
+                        wat.save()
+                    except Exception as e:
+                        dia.destroy()
+                        # oh no, error while saving state files
+                        flubber_error_dialog(self,
+                                            "Error while saving Watson state files",
+                                            str(e))
+                        # sync view with watson state
+                        self.reload_watson_data()
+                        # return here so that we dont process this event any further
+                        return
+                        
+                    # show user info about the job just stopped
+                    flubber_info_dialog(self, "Project frame edited", message)
+                # in all other cases make sure the editor dialog is disposed properly
+                dia.destroy()
+
+        # reload watson state
+        self.reload_watson_data()
 
     def on_track_switch_clicked(self, switch, gparam):
         wat = Watson()
@@ -250,12 +286,11 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                                                       beautify_tags(selected_tags),
                                                                       current["start"].humanize())
 
-                # close dialog in case we hit a error and return before standard cleanup in the end
-                dia.destroy()
                 try:
                     # save the state files
                     wat.save()
                 except Exception as e:
+                    dia.destroy()
                     # oh no, error while saving state files
                     flubber_error_dialog(self,
                                         "Error while saving Watson state files",
@@ -297,12 +332,11 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                                                                beautify_tags(frame.tags),
                                                                                frame.start.humanize(),
                                                                                frame.stop.humanize())
-            # close dialog in case we hit a error and return before standard cleanup in the end
-            dia.destroy()
             try:
                 # save the state files
                 wat.save()
             except Exception as e:
+                dia.destroy()
                 # oh no, error while saving state files
                 flubber_error_dialog(self,
                                      "Error while saving Watson state files",
