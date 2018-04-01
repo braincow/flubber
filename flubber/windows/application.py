@@ -4,7 +4,7 @@ from watson.utils import sorted_groupby, format_timedelta, get_frame_from_argume
 import arrow
 import operator
 from functools import reduce
-from flubber.dialogs import FlubberAddFrameDialog
+from flubber.dialogs import FlubberAddFrameDialog, FlubberStartFrameDialog
 from flubber.dialogs.util import flubber_error_dialog, flubber_warning_dialog, flubber_info_dialog
 
 
@@ -134,7 +134,6 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
     def on_track_switch_clicked(self, switch, gparam):
         wat = Watson()
-        print(switch.get_active())
         if switch.get_active():
             # we are stopping a running watson job
             if not wat.is_started:
@@ -159,15 +158,50 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 # oh no, error while saving state files
                 flubber_error_dialog(self,
                                      "Error while saving Watson state files",
-                                     e)
+                                     str(e))
                 # return here so that we dont process this event any further
                 return
                 
             # show user info about the job just stopped
             flubber_info_dialog(self, "Project stopped", message)
+        else:
+            # we want to start a new watson run.
+            # present dialog and verify data
+            dia = FlubberStartFrameDialog(self)
+            response = dia.run()
+            if response == Gtk.ResponseType.OK:
+                # read values from dialog
+                project = dia.project_combo.get_child().get_text()
+                selected_tags = list()
+                [ selected_tags.append(row[0]) for row in dia.selected_tag_store ]
+                # start new watson entry
+                current = wat.start(project, selected_tags, restart=False)
+                message = "Starting project {} {}, started {}.".format(
+                                                                      project,
+                                                                      ', '.join(selected_tags),
+                                                                      current["start"].humanize())
 
-            # and finally update watson status to main view
-            self.reload_watson_data()
+                # close dialog in case we hit a error and return before standard cleanup in the end
+                dia.destroy()
+                try:
+                    # save the state files
+                    wat.save()
+                except Exception as e:
+                    # oh no, error while saving state files
+                    flubber_error_dialog(self,
+                                        "Error while saving Watson state files",
+                                        str(e))
+                    # return here so that we dont process this event any further
+                    return
+
+                # show user info about the added job
+                flubber_info_dialog(self, "Frame started", message)
+
+            # close dialog in all cases
+            dia.destroy()
+
+        # and finally update watson status to main view
+        self.reload_watson_data()
 
     def on_add_button_clicked(self, button):
         dia = FlubberAddFrameDialog(self)
@@ -186,11 +220,13 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                tags=selected_tags,
                                from_date=start_date,
                                to_date=end_date)
-            message = "Adding project {}{}, started {} and stopped {}.".format(
+            message = "Adding project {} {}, started {} and stopped {}.".format(
                                                                                frame.project,
                                                                                ', '.join(selected_tags),
                                                                                frame.start.humanize(),
                                                                                frame.stop.humanize())
+            # close dialog in case we hit a error and return before standard cleanup in the end
+            dia.destroy()
             try:
                 # save the state files
                 wat.save()
@@ -198,12 +234,12 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 # oh no, error while saving state files
                 flubber_error_dialog(self,
                                      "Error while saving Watson state files",
-                                     e)
+                                     str(e))
                 # return here so that we dont process this event any further
                 return
 
-            # show user info about the job just stopped
-            flubber_info_dialog(self, "Project stopped", message)
+            # show user info about the added job
+            flubber_info_dialog(self, "Frame added", message)
 
             # and finally update watson status to main view
             self.reload_watson_data()
@@ -217,13 +253,14 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             self.maximize()
         else:
             self.unmaximize()
+        # also refresh data while we are at it
+        self.reload_watson_data()
 
     def on_reload_button_clicked(self, button):
         # update model
         self.reload_watson_data()
 
     def reload_watson_data(self):
-        print("Reloading Watson state")
         # as a test show frames from Watson
         wat = Watson()
         frames_by_day = sorted_groupby(wat.frames.filter(
