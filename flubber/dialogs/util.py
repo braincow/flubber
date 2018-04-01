@@ -4,8 +4,9 @@ def flubber_dialog(parent, title, message, msgtype, btntype):
     dialog = Gtk.MessageDialog(parent, 0, msgtype,
         btntype, title)
     dialog.format_secondary_text(message)
-    dialog.run()
+    response = dialog.run()
     dialog.destroy()
+    return response
 
 def flubber_error_dialog(parent, title, message):
     # show an error message dialog
@@ -24,3 +25,9 @@ def flubber_info_dialog(parent, title, message):
     flubber_dialog(parent, title, message,
                    Gtk.MessageType.INFO,
                    Gtk.ButtonsType.OK)
+
+def flubber_confirm_dialog(parent, title, message):
+    # show information message dialog
+    return flubber_dialog(parent, title, message,
+                   Gtk.MessageType.QUESTION,
+                   Gtk.ButtonsType.YES_NO)

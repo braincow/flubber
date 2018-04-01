@@ -5,7 +5,7 @@ import arrow
 import operator
 from functools import reduce
 from flubber.dialogs import FlubberAddFrameDialog, FlubberStartFrameDialog
-from flubber.dialogs.util import flubber_error_dialog, flubber_warning_dialog, flubber_info_dialog
+from flubber.dialogs.util import flubber_error_dialog, flubber_warning_dialog, flubber_info_dialog, flubber_confirm_dialog
 from flubber.util import beautify_tags
 
 class FlubberAppWindow(Gtk.ApplicationWindow):
@@ -48,6 +48,14 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         self.add_button.connect("clicked", self.on_add_button_clicked)
         self.hb.pack_end(self.add_button)
 
+        # button to delete frames
+        self.del_button = Gtk.Button()
+        icon = Gio.ThemedIcon(name="edit-delete")
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        self.del_button.add(image)
+        self.del_button.connect("clicked", self.on_del_button_clicked)
+        self.hb.pack_end(self.del_button)
+
         # button to track project
         self.track_button = Gtk.Switch()
         # use button-press-event instead of notify::active so that
@@ -65,10 +73,15 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         grid.set_row_homogeneous(True)
         self.add(grid)
 
+        # the magic of the store is as follows:
+        #  day (branch node) and project name (leaf) can share
+        #  same first element
+        self.store = Gtk.TreeStore(str, str, str, str, bool)
+
         # TreeView
         # the treeview shows the model
         # create a treeview on the model store
-        self.view = Gtk.TreeView()
+        self.view = Gtk.TreeView().new_with_model(self.store)
 
         # the cellrenderer for the column - text
         renderer_days = Gtk.CellRendererText()
@@ -98,11 +111,12 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             "Project tags", rendered_tags, text=3)
         self.view.append_column(column_tags)
 
-        # cellrender for project start time
-        rendered_start = Gtk.CellRendererText()
-        column_start = Gtk.TreeViewColumn(
-            "Project start time", rendered_start, text=4)
-        self.view.append_column(column_start)
+        # cellrender for project selection toggle
+        rendered_select = Gtk.CellRendererToggle()
+        column_select = Gtk.TreeViewColumn(
+            "Select", rendered_select, active=4)
+        rendered_select.connect("toggled", self.on_cell_toggled)
+        self.view.append_column(column_select)
 
         # grab double click event on the list
         self.view.connect("row-activated", self.on_view_row_activated)
@@ -119,6 +133,60 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # on first load show watson data
         self.reload_watson_data()
 
+    def on_del_button_clicked(self, button):
+        # user wants to remove frames
+        response = flubber_confirm_dialog(self,
+                                          "Confirm frame remove",
+                                          "Do you really want to remove selected frame(s)?")
+        if response == Gtk.ResponseType.YES:
+            # delete it from Watson db
+            wat = Watson()
+            # keep record of deleted frames
+            deleted_frames = list()
+            # go through the model and remove all selected frames
+            for row in self.store:
+                # get the iter associated with the path
+                piter = self.store.get_iter(row.path)
+                # get the iter associated with its first child
+                citer = self.store.iter_children(piter)
+                while citer is not None:
+                    if self.store[citer][4]:
+                        frame = get_frame_from_argument(wat, self.store[citer][0])
+                        print(frame.id)
+                        del wat.frames[frame.id]
+                        deleted_frames.append(frame.id)
+                    citer = self.store.iter_next(citer)
+            # save watson state and inform user
+            if len(deleted_frames) > 0:
+                try:
+                    # save the state files
+                    wat.save()
+                except Exception as e:
+                    # oh no, error while saving state files
+                    flubber_error_dialog(self,
+                                        "Error while saving Watson state files",
+                                        str(e))
+                    # sync view with watson state
+                    self.reload_watson_data()
+                    # return here so that we dont process this event any further
+                    return
+
+                flubber_info_dialog(self, "Frames deleted", "Frame(s) were deleted.")
+            else:
+                flubber_info_dialog(self, "No frames deleted", "No frames selected or frames were removed from cli.")
+
+        # update internal Watson state
+        self.reload_watson_data()
+
+    def on_cell_toggled(self, widget, path):
+        # treepath always contains : if it is child of some day branch
+        # (is there a more clean way to do this?)
+        if ":" in str(path):
+            # toggle the selection into opposite boolean state
+            self.store[path][4] = not self.store[path][4]
+        else:
+            flubber_info_dialog(self,"Invalid selection", "Selecting a date is not supported.")     
+
     def on_view_row_activated(self, treeview, treepath, column):
         # user double clicked a row on the tree
         # treepath always contains : if it is child of some day branch
@@ -129,7 +197,6 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 #wat = Watson()
                 #frame = get_frame_from_argument(wat, model[treeiter][0])
                 # TODO: edit frame in a dialog
-                # TODO: or delete frame and verify command
                 pass
 
     def on_track_switch_clicked(self, switch, gparam):
@@ -159,6 +226,8 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 flubber_error_dialog(self,
                                      "Error while saving Watson state files",
                                      str(e))
+                # sync view with watson state
+                self.reload_watson_data()
                 # return here so that we dont process this event any further
                 return
                 
@@ -191,6 +260,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                     flubber_error_dialog(self,
                                         "Error while saving Watson state files",
                                         str(e))
+                    # sync view with watson state
+                    self.reload_watson_data()
+
                     # return here so that we dont process this event any further
                     return
 
@@ -235,6 +307,8 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 flubber_error_dialog(self,
                                      "Error while saving Watson state files",
                                      str(e))
+                # sync view with watson state
+                self.reload_watson_data()
                 # return here so that we dont process this event any further
                 return
 
@@ -268,10 +342,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             operator.attrgetter('day'), reverse=True
             )
 
-        # the magic of the store is as follows:
-        #  day (branch node) and project name (leaf) can share
-        #  same first element
-        self.store = Gtk.TreeStore(str, str, str, str, str)
+        # clear the store for new appends
+        self.store.clear()
+        # loop through frames and populate the model
         for i, (day, frames) in enumerate(frames_by_day):
             # convert itertools grouper object into list first
             #  https://stackoverflow.com/questions/44490079/how-to-turn-an-itertools-grouper-object-into-a-list#44490269
@@ -283,7 +356,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             ))
             # piter refers to branch, use it to add leaf later (see below)
             #  all other entries are None, including top branch as we have none
-            piter = self.store.append(None, [day, None, daily_total, None, None])
+            piter = self.store.append(None, [day, None, daily_total, None, False])
             for frame in frames:
                 tags = ', '.join(frame.tags)
                 # here under branch (piter) we add a leaf
@@ -294,7 +367,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                    frame.project,
                                    format_timedelta(frame.stop - frame.start),
                                    tags,
-                                   str(frame.start)])
+                                   False])
 
         # update treeview with the new model
         self.view.set_model(self.store)
