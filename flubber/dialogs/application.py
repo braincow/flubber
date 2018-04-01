@@ -1,13 +1,27 @@
 from gi.repository import Gtk, Gio
-
 from watson import Watson
+from flubber.dialogs.util import flubber_error_dialog
+from flubber.util import arrow_parse_datetime
+from arrow.parser import ParserError
 
-class FlubberFrameDialog(Gtk.Dialog):
+class FlubberAddFrameDialog(Gtk.Dialog):
+
+    # these booleans all need to switch to True state for OK button to release
+    project_validated = False
+    start_date_validated = False
+    end_date_validated = False
+
+    # these fields contain the parsed datetime object
+    parsed_start_datetime = None
+    parsed_end_datetime = None
 
     def __init__(self, parent):
-        Gtk.Dialog.__init__(self, "Add", parent, 0,
+        Gtk.Dialog.__init__(self, "Add frame", parent, 0,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OK, Gtk.ResponseType.OK))
+
+        # validate here to set OK button in disabled state on init
+        self.self_validate()
 
         # init Watson to read in existing projects and tags from it
         wat = Watson()
@@ -42,16 +56,19 @@ class FlubberFrameDialog(Gtk.Dialog):
             project_store.append([project, project])
         self.project_combo = Gtk.ComboBox.new_with_model_and_entry(project_store)
         self.project_combo.set_entry_text_column(1)
+        self.project_combo.connect("changed", self.on_project_combo_changed)
         grid.attach_next_to(self.project_combo, project_label, Gtk.PositionType.RIGHT, 1, 1)
         # Add label and entry field for start date input
-        start_label = Gtk.Label("Start date")
+        start_label = Gtk.Label("Start date and time")
         grid.attach_next_to(start_label, project_label, Gtk.PositionType.BOTTOM, 1, 1)
         self.start_entry = Gtk.Entry()
+        self.start_entry.connect("changed", self.on_start_entry_changed)
         grid.attach_next_to(self.start_entry, start_label, Gtk.PositionType.RIGHT, 1, 1)
         # add label and entry field for end date input
-        end_label = Gtk.Label("End date")
+        end_label = Gtk.Label("End date and time")
         grid.attach_next_to(end_label, start_label, Gtk.PositionType.BOTTOM, 1, 1)
         self.end_entry = Gtk.Entry()
+        self.end_entry.connect("changed", self.on_end_entry_changed)
         grid.attach_next_to(self.end_entry, end_label, Gtk.PositionType.RIGHT, 1, 1)
 
         # page2 of notebook interface is for tag input
@@ -104,6 +121,51 @@ class FlubberFrameDialog(Gtk.Dialog):
         # show all elements on the dialog
         self.show_all()
 
+    def self_validate(self):
+        if False in [self.project_validated, self.start_date_validated, self.end_date_validated]:
+            # by default the OK button is grayed out until all fields report OK
+            # does not count the tags as that can be empty too
+            self.set_response_sensitive (Gtk.ResponseType.OK, False)
+        else:
+            self.set_response_sensitive (Gtk.ResponseType.OK, True)
+
+    def on_start_entry_changed(self, entry):
+        try:
+            # try to parse the input field contents with arrow
+            self.parsed_start_datetime = arrow_parse_datetime(entry.get_text())
+            self.start_date_validated = True
+        except ParserError:
+            self.start_date_validated = False
+        finally:
+            # test toggle of OK button
+            self.self_validate()
+
+    def on_end_entry_changed(self, entry):
+        try:
+            # try to parse the input field contents with arrow
+            self.parsed_end_datetime = arrow_parse_datetime(entry.get_text())
+            self.end_date_validated = True
+            # check that end date comes after start time
+            if self.parsed_end_datetime < self.parsed_start_datetime:
+                raise ValueError("Start time has to occur before end time.")
+        except ValueError:
+            self.end_date_validated = False
+        except ParserError:
+            self.end_date_validated = False
+        finally:
+            # test toggle of OK button
+            self.self_validate()
+
+    def on_project_combo_changed(self, combo):
+        # toggle validation for project name field
+        text = combo.get_child().get_text()
+        if text == "":
+            self.project_validated = False
+        else:
+            self.project_validated = True
+        # test toggle of OK button
+        self.self_validate()
+
     def on_del_clicked(self, button):
         # user wants to remove selected entry from list
         selection = self.tag_view.get_selection()
@@ -121,24 +183,16 @@ class FlubberFrameDialog(Gtk.Dialog):
         # check that it is not empty
         selected_tag = self.tag_combo.get_child().get_text()
         if selected_tag is None or selected_tag == '' or selected_tag is '':
-            dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-                Gtk.ButtonsType.CANCEL, "Selected tag is empty")
-            dialog.format_secondary_text(
-                "Adding a empty tag is not allowed.")
-            dialog.run()
-            dialog.destroy()
+            flubber_error_dialog(self, "Selected tag is empty",
+                                 "Adding a empty tag is not allowed.")
             # return here so that we dont process the empty entry
             return
 
         # check that selected_tag is not already in the list
         for key, value in self.selected_tag_store:
             if key == selected_tag:
-                dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-                    Gtk.ButtonsType.CANCEL, "Selected tag is already added")
-                dialog.format_secondary_text(
-                    "Adding a duplicate tag '{}' is not allowed.".format(value))
-                dialog.run()
-                dialog.destroy()
+                flubber_error_dialog(self, "Adding a duplicate tag",
+                                     "Adding a duplicate tag '{}' is not allowed".format(value))
                 # return here so that we dont process the dumplicate entry
                 return
 

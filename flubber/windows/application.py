@@ -1,10 +1,12 @@
 from gi.repository import GLib, Gio, Gtk
 from watson import Watson
-from watson.utils import sorted_groupby, format_timedelta
+from watson.utils import sorted_groupby, format_timedelta, get_frame_from_argument
 import arrow
 import operator
 from functools import reduce
-from flubber.dialogs import FlubberFrameDialog
+from flubber.dialogs import FlubberAddFrameDialog
+from flubber.dialogs.util import flubber_error_dialog, flubber_warning_dialog, flubber_info_dialog
+
 
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
@@ -102,9 +104,8 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             "Project start time", rendered_start, text=4)
         self.view.append_column(column_start)
 
-        # grab click to list item
-        select = self.view.get_selection()
-        select.connect("changed", self.on_tree_selection_changed)
+        # grab double click event on the list
+        self.view.connect("row-activated", self.on_view_row_activated)
 
         # create scrollable window and place tree view inside it
         scrollable_treelist = Gtk.ScrolledWindow()
@@ -118,11 +119,18 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # on first load show watson data
         self.reload_watson_data()
 
-    def on_tree_selection_changed(self, selection):
-        # user clicked an entry on the tree
-        model, treeiter = selection.get_selected()
-        if treeiter is not None:
-            print(model[treeiter][0])
+    def on_view_row_activated(self, treeview, treepath, column):
+        # user double clicked a row on the tree
+        # treepath always contains : if it is child of some day branch
+        # (is there a more clean way to do this?)
+        if ":" in str(treepath):
+            model, treeiter = treeview.get_selection().get_selected()
+            if treeiter is not None:
+                #wat = Watson()
+                #frame = get_frame_from_argument(wat, model[treeiter][0])
+                # TODO: edit frame in a dialog
+                # TODO: or delete frame and verify command
+                pass
 
     def on_track_switch_clicked(self, switch, gparam):
         wat = Watson()
@@ -131,12 +139,11 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             # we are stopping a running watson job
             if not wat.is_started:
                 # for some reason Watson disagrees
-                dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
-                    Gtk.ButtonsType.CANCEL, "No project started")
-                dialog.format_secondary_text(
-                    "No project currently started. Did you stop the project from command line instead?")
-                dialog.run()
-                dialog.destroy()
+                flubber_warning_dialog(self,
+                                       "No project started",
+                                       "No project currently started. Did you stop the project from command line instead?")
+                # obviously our internal state is not in sync so sync it
+                self.reload_watson_data()
                 # return here so that main gui is again active
                 return
             # stop the job
@@ -150,37 +157,58 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 wat.save()
             except Exception as e:
                 # oh no, error while saving state files
-                dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.ERROR,
-                    Gtk.ButtonsType.CANCEL, "Error while saving state files")
-                dialog.format_secondary_text(e)
-                dialog.run()
-                dialog.destroy()
-                # return here so that main gui is again active
+                flubber_error_dialog(self,
+                                     "Error while saving Watson state files",
+                                     e)
+                # return here so that we dont process this event any further
                 return
                 
             # show user info about the job just stopped
-            dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
-                Gtk.ButtonsType.OK, "Project stopped")
-            dialog.format_secondary_text(message)
-            dialog.run()
-            dialog.destroy()
+            flubber_info_dialog(self, "Project stopped", message)
 
             # and finally update watson status to main view
             self.reload_watson_data()
 
     def on_add_button_clicked(self, button):
-        dia = FlubberFrameDialog(self)
+        dia = FlubberAddFrameDialog(self)
         response = dia.run()
 
         if response == Gtk.ResponseType.OK:
-            print("OK clicked in dialog")
+            # fetch info from dialog
             project = dia.project_combo.get_child().get_text()
-            print(project)
-        elif response == Gtk.ResponseType.CANCEL:
-            print("Cancel clicked in dialog")
-        elif response == Gtk.ResponseType.DELETE_EVENT:
-            print("Dialog was closed")
+            start_date = dia.parsed_start_datetime
+            end_date = dia.parsed_end_datetime
+            selected_tags = list()
+            [ selected_tags.append(row[0]) for row in dia.selected_tag_store ]
+            # save frame via watson, first validate values in the Add dialog
+            wat = Watson()
+            frame = wat.add(project=project,
+                               tags=selected_tags,
+                               from_date=start_date,
+                               to_date=end_date)
+            message = "Adding project {}{}, started {} and stopped {}.".format(
+                                                                               frame.project,
+                                                                               ', '.join(selected_tags),
+                                                                               frame.start.humanize(),
+                                                                               frame.stop.humanize())
+            try:
+                # save the state files
+                wat.save()
+            except Exception as e:
+                # oh no, error while saving state files
+                flubber_error_dialog(self,
+                                     "Error while saving Watson state files",
+                                     e)
+                # return here so that we dont process this event any further
+                return
 
+            # show user info about the job just stopped
+            flubber_info_dialog(self, "Project stopped", message)
+
+            # and finally update watson status to main view
+            self.reload_watson_data()
+
+        # destroy dialog after we have read all the variables or if it was closed
         dia.destroy()
 
     def on_maximize_toggle(self, action, value):
@@ -195,6 +223,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         self.reload_watson_data()
 
     def reload_watson_data(self):
+        print("Reloading Watson state")
         # as a test show frames from Watson
         wat = Watson()
         frames_by_day = sorted_groupby(wat.frames.filter(
@@ -222,6 +251,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 tags = ', '.join(frame.tags)
                 # here under branch (piter) we add a leaf
                 #  see TreeStore definition above for field count
+                # Watson uses in its TUI seven char length IDs; do the same
                 self.store.append(piter,
                                   [frame.id[:7],
                                    frame.project,

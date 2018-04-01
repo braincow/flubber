@@ -1,3 +1,3 @@
-from .application import FlubberFrameDialog
+from .application import FlubberAddFrameDialog
 
-__all__ = ['FlubberFrameDialog']
+__all__ = ['FlubberAddFrameDialog']
