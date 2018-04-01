@@ -217,7 +217,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             ))
             # piter refers to branch, use it to add leaf later (see below)
             #  all other entries are None, including top branch as we have none
-            piter = self.store.append(None, [day, "-", daily_total, None, None])
+            piter = self.store.append(None, [day, None, daily_total, None, None])
             for frame in frames:
                 tags = ', '.join(frame.tags)
                 # here under branch (piter) we add a leaf
