@@ -1,18 +1,27 @@
-# README Boilerplate
+# Flubber
 
-A collection of best practices for a simple and informative README.
+Hi, I am Flubber. Your friendly time management utility and a companion for wonderful TailorDev/Watson time tracker. My purpose is not to replace Watson, but to bring those features you need most often to nice Gtk+ GUI and leave the power of Watson still available to you via its command line.
 
 ## Installation
 
-Duh.
+Currently I am lacking fully functional setup.py deployment, "Some assembly required". So I am recommending that if you would like to test me please clone the repository and through Makefile magic prepare my Python virtual environment.
+
+```
+$ git clone https://github.com/braincow/flubber.git
+$ make env
+```
 
 ## Usage
 
-Edit `README.md` with the name of your project, a description, installation instructions, usage instructions, how to get support, and how people can contribute to your project.
+To run me properly since my installation is still a bit lagging is also trough my Makefile.
+
+```
+$ make run
+```
 
 ## Support
 
-Please open an issue to receive support for this project.
+Please open an issue to receive support. Please be mindful that this is currently just only a hobby and learning project so help might never come.
 
 ## Contributing
 
