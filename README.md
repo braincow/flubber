@@ -19,6 +19,8 @@ To run me properly since my installation is still a bit lagging is also trough m
 $ make run
 ```
 
+Warning though: my "add frame" feature requires branched version of Watson since pull request concerning that in Watson has not been approved for upstream yet.
+
 ## Support
 
 Please open an issue to receive support. Please be mindful that this is currently just only a hobby and learning project so help might never come.
