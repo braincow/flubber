@@ -8,6 +8,7 @@ Currently I am lacking fully functional setup.py deployment, "Some assembly requ
 
 ```
 $ git clone https://github.com/braincow/flubber.git
+$ cd flubber
 $ make env
 ```
 
