@@ -1,9 +1,6 @@
 from gi.repository import Gtk, Gio
 from watson import Watson
 from flubber.dialogs.util import flubber_error_dialog
-from flubber.util import arrow_parse_datetime
-from arrow.parser import ParserError
-import arrow
 
 
 class FlubberStartFrameDialog(Gtk.Dialog):
@@ -13,8 +10,8 @@ class FlubberStartFrameDialog(Gtk.Dialog):
 
     def __init__(self, parent):
         Gtk.Dialog.__init__(self, "Start frame", parent, 0,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OK, Gtk.ResponseType.OK))
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                             Gtk.STOCK_OK, Gtk.ResponseType.OK))
 
         # validate here to set OK button in disabled state on init
         self.self_validate()
@@ -50,10 +47,12 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         project_store = Gtk.ListStore(str, str)
         for project in wat.projects:
             project_store.append([project, project])
-        self.project_combo = Gtk.ComboBox.new_with_model_and_entry(project_store)
+        self.project_combo = Gtk.ComboBox(has_entry=True)
+        self.project_combo.set_model(project_store)
         self.project_combo.set_entry_text_column(1)
         self.project_combo.connect("changed", self.on_project_combo_changed)
-        grid.attach_next_to(self.project_combo, project_label, Gtk.PositionType.RIGHT, 1, 1)
+        grid.attach_next_to(self.project_combo, project_label,
+                            Gtk.PositionType.RIGHT, 1, 1)
 
         # page2 of notebook interface is for tag input
         page2 = Gtk.Box()
@@ -70,7 +69,8 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         existing_tag_store = Gtk.ListStore(str, str)
         for tag in wat.tags:
             existing_tag_store.append([tag, tag])
-        self.tag_combo = Gtk.ComboBox.new_with_model_and_entry(existing_tag_store)
+        self.tag_combo = Gtk.ComboBox(has_entry=True)
+        self.tag_combo.set_model(existing_tag_store)
         self.tag_combo.set_entry_text_column(1)
         grid2.add(self.tag_combo)
         # interface button to add items to list
@@ -78,7 +78,8 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         icon = Gio.ThemedIcon(name="list-add")
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
         add_button.add(image)
-        grid2.attach_next_to(add_button, self.tag_combo, Gtk.PositionType.RIGHT, 1, 1)
+        grid2.attach_next_to(add_button, self.tag_combo,
+                             Gtk.PositionType.RIGHT, 1, 1)
         # action method for add button
         add_button.connect("clicked", self.on_add_clicked)
         # ro listbox to show added elements
@@ -90,13 +91,15 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         scrollable_treelist = Gtk.ScrolledWindow()
         scrollable_treelist.set_vexpand(True)
         scrollable_treelist.add(self.tag_view)
-        grid2.attach_next_to(scrollable_treelist, self.tag_combo, Gtk.PositionType.BOTTOM, 1, 3)
+        grid2.attach_next_to(scrollable_treelist, self.tag_combo,
+                             Gtk.PositionType.BOTTOM, 1, 3)
         # interface button to delete selected item from list
         self.del_button = Gtk.Button()
         icon = Gio.ThemedIcon(name="list-remove")
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
         self.del_button.add(image)
-        grid2.attach_next_to(self.del_button, scrollable_treelist, Gtk.PositionType.RIGHT, 1, 1)
+        grid2.attach_next_to(self.del_button, scrollable_treelist,
+                             Gtk.PositionType.RIGHT, 1, 1)
         # action method for del button
         self.del_button.connect("clicked", self.on_del_clicked)
         # by default delete button is disabled
@@ -109,9 +112,9 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         if False in [self.project_validated]:
             # by default the OK button is grayed out until all fields report OK
             # does not count the tags as that can be empty too
-            self.set_response_sensitive (Gtk.ResponseType.OK, False)
+            self.set_response_sensitive(Gtk.ResponseType.OK, False)
         else:
-            self.set_response_sensitive (Gtk.ResponseType.OK, True)
+            self.set_response_sensitive(Gtk.ResponseType.OK, True)
 
     def on_project_combo_changed(self, combo):
         # toggle validation for project name field
@@ -148,8 +151,9 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         # check that selected_tag is not already in the list
         for key, value in self.selected_tag_store:
             if key == selected_tag:
-                flubber_error_dialog(self, "Adding a duplicate tag",
-                                     "Adding a duplicate tag '{}' is not allowed".format(value))
+                msg = ("Adding a duplicate tag "
+                       "'{}' is not allowed".format(value))
+                flubber_error_dialog(self, "Adding a duplicate tag", msg)
                 # return here so that we dont process the dumplicate entry
                 return
 

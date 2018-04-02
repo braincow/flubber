@@ -1,6 +1,7 @@
 import arrow
 from dateutil import tz
 
+
 def arrow_parse_datetime(value):
     date = arrow.get(value)
     # When we parse a date, we want to parse it in the timezone
@@ -8,6 +9,7 @@ def arrow_parse_datetime(value):
     # timezone, not in UTC. Watson Cf issue #16.
     date.tzinfo = tz.tzlocal()
     return date
+
 
 def beautify_tags(tag_list):
     if len(tag_list) > 0:
