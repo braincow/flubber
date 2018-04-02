@@ -29,7 +29,7 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -fr *.egg *.egg-info/ .eggs/
+	rm -fr *.egg *.egg-info/ .eggs/ .tox/ .pytest_cache/
 
 .PHONY:
 mostlyclean: clean distclean
@@ -37,3 +37,4 @@ mostlyclean: clean distclean
 
 run:
 	. "$(VENV_DIR)"/bin/activate; python -m flubber
+
