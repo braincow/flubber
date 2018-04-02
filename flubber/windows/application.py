@@ -133,6 +133,10 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # on first load show watson data
         self.reload_watson_data()
 
+        # and start monitoring for changes in Watson state
+        #  if user happens to change state through cmdline
+        GLib.timeout_add(5000, self.sync_track_status)
+
     def on_del_button_clicked(self, button):
         # user wants to remove frames
         response = flubber_confirm_dialog(self,
@@ -152,7 +156,6 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 while citer is not None:
                     if self.store[citer][4]:
                         frame = get_frame_from_argument(wat, self.store[citer][0])
-                        print(frame.id)
                         del wat.frames[frame.id]
                         deleted_frames.append(frame.id)
                     citer = self.store.iter_next(citer)
@@ -410,6 +413,11 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # update treeview with the new model
         self.view.set_model(self.store)
 
+        # sync track status too while we are at it
+        self.sync_track_status()
+
+    def sync_track_status(self):
+        wat = Watson()
         # check if watson is running and change toggle button state based on that
         if wat.is_started:
             self.track_button.set_active(True)
@@ -421,3 +429,6 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         else:
             self.track_button.set_active(False)
             self.track_status_label.set_text("Idle.")
+        
+        # always return true to make GLib.timeout_add to reschedule
+        return True
