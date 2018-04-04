@@ -186,14 +186,14 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 flubber_info_dialog(self,
                                     "Frames deleted",
                                     "Frame(s) were deleted.")
+
+                # update internal Watson state
+                self.reload_watson_data()
             else:
                 msg = "No frames selected or frame(s) were already removed."
                 flubber_info_dialog(self,
                                     "No frames deleted",
                                     msg)
-
-        # update internal Watson state
-        self.reload_watson_data()
 
     def on_cell_toggled(self, widget, path):
         # treepath always contains : if it is child of some day branch
