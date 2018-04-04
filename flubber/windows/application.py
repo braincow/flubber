@@ -252,12 +252,13 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
                     # show user info about the job just stopped
                     flubber_info_dialog(self, "Project frame edited", message)
+                
+                    # reload watson state
+                    self.reload_watson_data()
+                
                 # in all other cases make sure the editor dialog
                 #  is disposed properly
                 dia.destroy()
-
-        # reload watson state
-        self.reload_watson_data()
 
     def on_track_switch_clicked(self, switch, gparam):
         wat = Watson()
@@ -294,6 +295,9 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
             # show user info about the job just stopped
             flubber_info_dialog(self, "Project stopped", message)
+
+            # update main view with watson state
+            self.reload_watson_data()
         else:
             # we want to start a new watson run.
             # present dialog and verify data
@@ -330,11 +334,11 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                 # show user info about the added job
                 flubber_info_dialog(self, "Frame started", message)
 
+                # and finally update watson active project status
+                self.sync_track_status()
+
             # close dialog in all cases
             dia.destroy()
-
-        # and finally update watson status to main view
-        self.reload_watson_data()
 
     def on_add_button_clicked(self, button):
         dia = FlubberAddFrameDialog(self)
