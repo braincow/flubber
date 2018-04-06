@@ -84,10 +84,12 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         self.add(self.grid)
 
         # Welcome message
+        welcome_msg = ("No frames yet. You can "
+                       "<a href='start'>start/stop tracking</a>"
+                       " a project or <a href='add'>add a "
+                       "existing</a> entry.")
         self.welcome_label = Gtk.Label()
-        self.welcome_label.set_markup(("No frames yet. You can "
-                                       "<a href='start'>start/stop tracking</a> a project "
-                                       "or <a href='add'>add a existing</a> entry."))
+        self.welcome_label.set_markup(welcome_msg)
         self.welcome_label.connect("activate-link", self.on_link_clicked)
 
         # the magic of the store is as follows:
@@ -267,10 +269,10 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
                     # show user info about the job just stopped
                     flubber_info_dialog(self, "Project frame edited", message)
-                
+
                     # reload watson state
                     self.reload_watson_data()
-                
+
                 # in all other cases make sure the editor dialog
                 #  is disposed properly
                 dia.destroy()
