@@ -59,6 +59,12 @@ class FlubberAddFrameDialog(Gtk.Dialog):
         self.project_combo.set_model(project_store)
         self.project_combo.set_entry_text_column(1)
         self.project_combo.connect("changed", self.on_project_combo_changed)
+        # also add completion to the entry text field inside the combobox
+        project_completion = Gtk.EntryCompletion()
+        project_completion.set_model(project_store)
+        project_completion.set_text_column(0)
+        self.project_combo.get_child().set_completion(project_completion)
+        # add combobox to grid
         grid.attach_next_to(self.project_combo, project_label,
                             Gtk.PositionType.RIGHT, 1, 1)
         # Add label and entry field for start date input
@@ -96,6 +102,12 @@ class FlubberAddFrameDialog(Gtk.Dialog):
         self.tag_combo = Gtk.ComboBox(has_entry=True)
         self.tag_combo.set_model(existing_tag_store)
         self.tag_combo.set_entry_text_column(1)
+        # also add completion to the entry text field inside the combobox
+        tag_completion = Gtk.EntryCompletion()
+        tag_completion.set_model(existing_tag_store)
+        tag_completion.set_text_column(0)
+        self.tag_combo.get_child().set_completion(tag_completion)
+        # add combobox to grid
         grid2.add(self.tag_combo)
         # interface button to add items to list
         add_button = Gtk.Button()
