@@ -17,6 +17,8 @@ from flubber.util import beautify_tags
 
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
+    welcome_enabled = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -76,10 +78,19 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         self.hb.pack_start(self.track_status_label)
 
         # assign grid to the window for element placement
-        grid = Gtk.Grid()
-        grid.set_column_homogeneous(True)
-        grid.set_row_homogeneous(True)
-        self.add(grid)
+        self.grid = Gtk.Grid()
+        self.grid.set_column_homogeneous(True)
+        self.grid.set_row_homogeneous(True)
+        self.add(self.grid)
+
+        # Welcome message
+        welcome_msg = ("No frames yet. You can "
+                       "<a href='start'>start/stop tracking</a>"
+                       " a project or <a href='add'>add a "
+                       "existing</a> entry.")
+        self.welcome_label = Gtk.Label()
+        self.welcome_label.set_markup(welcome_msg)
+        self.welcome_label.connect("activate-link", self.on_link_clicked)
 
         # the magic of the store is as follows:
         #  day (branch node) and project name (leaf) can share
@@ -132,7 +143,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # create scrollable window and place tree view inside it
         scrollable_treelist = Gtk.ScrolledWindow()
         scrollable_treelist.set_vexpand(True)
-        grid.attach(scrollable_treelist, 0, 0, 8, 10)
+        self.grid.attach(scrollable_treelist, 0, 0, 8, 10)
         scrollable_treelist.add(self.view)
 
         # show all elements on this window
@@ -144,6 +155,12 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         # and start monitoring for changes in Watson state
         #  if user happens to change state through cmdline
         GLib.timeout_add(5000, self.sync_track_status)
+
+    def on_link_clicked(self, label, uri):
+        if uri == 'start':
+            self.on_track_switch_clicked(self.track_button, None)
+        elif uri == 'add':
+            self.on_add_button_clicked(self.add_button)
 
     def on_del_button_clicked(self, button):
         # user wants to remove frames
@@ -252,10 +269,10 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
 
                     # show user info about the job just stopped
                     flubber_info_dialog(self, "Project frame edited", message)
-                
+
                     # reload watson state
                     self.reload_watson_data()
-                
+
                 # in all other cases make sure the editor dialog
                 #  is disposed properly
                 dia.destroy()
@@ -440,8 +457,25 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                    tags,
                                    False])
 
-        # update treeview with the new model
-        self.view.set_model(self.store)
+        if len(self.store) > 0:
+            if self.welcome_enabled:
+                # hide welcome message
+                self.remove(self.welcome_label)
+                # show the main grid
+                self.add(self.grid)
+            # update treeview with the new model
+            self.view.set_model(self.store)
+            # enable delete button
+            self.del_button.set_sensitive(True)
+        else:
+            # show welcome message and hide the main grid
+            self.remove(self.grid)
+            self.add(self.welcome_label)
+            self.welcome_enabled = True
+            # disable delete button
+            self.del_button.set_sensitive(False)
+
+        self.show_all()
 
         # sync track status too while we are at it
         self.sync_track_status()
