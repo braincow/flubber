@@ -213,15 +213,40 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                                     msg)
 
     def on_cell_toggled(self, widget, path):
-        # treepath always contains : if it is child of some day branch
-        # (is there a more clean way to do this?)
-        if ":" in str(path):
-            # toggle the selection into opposite boolean state
-            self.store[path][4] = not self.store[path][4]
-        else:
-            flubber_info_dialog(self,
-                                "Invalid selection",
-                                "Selecting a date is not supported.")
+        # the boolean value of the selected row
+        current_value = self.store[path][4]
+        # change the boolean value of the selected row in the model
+        self.store[path][4] = not current_value
+        # new current value!
+        current_value = not current_value
+        # if length of the path is 1 (that is, if we are selecting an day)
+        if len(path) == 1:
+            # get the iter associated with the path
+            piter = self.store.get_iter(path)
+            # get the iter associated with its first child
+            citer = self.store.iter_children(piter)
+            # while there are children, change the state of their boolean value
+            # to the value of the day
+            while citer is not None:
+                self.store[citer][4] = current_value
+                citer = self.store.iter_next(citer)
+        # if the length of the path is not 1 (that is, if we are selecting a
+        # project frame)
+        elif len(path) != 1:
+            # get the first child of the parent of the day (the first frame of
+            # the day)
+            citer = self.store.get_iter(path)
+            piter = self.store.iter_parent(citer)
+            citer = self.store.iter_children(piter)
+            # check if all the children are selected
+            all_selected = True
+            while citer is not None:
+                if self.store[citer][4] == False:
+                    all_selected = False
+                    break
+                citer = self.store.iter_next(citer)
+            # if they do, the day as well is selected; otherwise it is not
+            self.store[piter][4] = all_selected
 
     def on_view_row_activated(self, treeview, treepath, column):
         # user double clicked a row on the tree
