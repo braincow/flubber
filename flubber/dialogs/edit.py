@@ -177,9 +177,36 @@ class FlubberEditFrameDialog(Gtk.Dialog):
         try:
             # try to parse the input field contents with arrow
             self.parsed_start_datetime = arrow_parse_datetime(entry.get_text())
+            # check that end date comes after start time
+            if self.parsed_end_datetime < self.parsed_start_datetime:
+                raise ValueError("Start time has to occur before end time.")
             self.start_date_validated = True
-        except ParserError:
+            entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
+            entry.set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
+        except ValueError as e:
             self.start_date_validated = False
+            entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                "dialog-error")
+            entry.set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                str(e))
+        except ParserError as e:
+            self.start_date_validated = False
+            entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                "dialog-error")
+            entry.set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                str(e))
+        except TypeError:
+            # Triggers when dialog is first opened and not all values are
+            #  yet parsed into class variables and dates are compared
+            pass
         finally:
             # test toggle of OK button
             self.self_validate()
@@ -188,14 +215,32 @@ class FlubberEditFrameDialog(Gtk.Dialog):
         try:
             # try to parse the input field contents with arrow
             self.parsed_end_datetime = arrow_parse_datetime(entry.get_text())
-            self.end_date_validated = True
             # check that end date comes after start time
             if self.parsed_end_datetime < self.parsed_start_datetime:
                 raise ValueError("Start time has to occur before end time.")
-        except ValueError:
+            self.end_date_validated = True
+            entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
+            entry.set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
+        except ValueError as e:
             self.end_date_validated = False
-        except ParserError:
+            entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                "dialog-error")
+            entry.set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                str(e))
+        except ParserError as e:
             self.end_date_validated = False
+            entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                "dialog-error")
+            entry.set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                str(e))
         finally:
             # test toggle of OK button
             self.self_validate()
@@ -205,8 +250,20 @@ class FlubberEditFrameDialog(Gtk.Dialog):
         text = combo.get_child().get_text()
         if text == "":
             self.project_validated = False
+            combo.get_child().set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                "dialog-error")
+            combo.get_child().set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                "Project name is required.")
         else:
             self.project_validated = True
+            combo.get_child().set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
+            combo.get_child().set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
         # test toggle of OK button
         self.self_validate()
 

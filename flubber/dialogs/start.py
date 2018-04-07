@@ -133,8 +133,20 @@ class FlubberStartFrameDialog(Gtk.Dialog):
         text = combo.get_child().get_text()
         if text == "":
             self.project_validated = False
+            combo.get_child().set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                "dialog-error")
+            combo.get_child().set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                "Project name is required.")
         else:
             self.project_validated = True
+            combo.get_child().set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
+            combo.get_child().set_icon_tooltip_text(
+                Gtk.EntryIconPosition.PRIMARY,
+                None)
         # test toggle of OK button
         self.self_validate()
 
