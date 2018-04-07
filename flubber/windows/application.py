@@ -241,7 +241,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
             # check if all the children are selected
             all_selected = True
             while citer is not None:
-                if self.store[citer][4] == False:
+                if not self.store[citer][4]:
                     all_selected = False
                     break
                 citer = self.store.iter_next(citer)
