@@ -119,19 +119,19 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         column_project.set_expand(True)
         self.view.append_column(column_project)
 
-        # cellrender for project/day length
-        rendered_length = Gtk.CellRendererText()
-        column_length = Gtk.TreeViewColumn(
-            "Project / day length", rendered_length, text=2)
-        column_length.set_expand(True)
-        self.view.append_column(column_length)
-
         # cellrender for project tags
         rendered_tags = Gtk.CellRendererText()
         column_tags = Gtk.TreeViewColumn(
-            "Project tags", rendered_tags, text=3)
+            "Tags", rendered_tags, text=3)
         column_tags.set_expand(True)
         self.view.append_column(column_tags)
+
+        # cellrender for project/day length
+        rendered_length = Gtk.CellRendererText()
+        column_length = Gtk.TreeViewColumn(
+            "Duration", rendered_length, text=2)
+        column_length.set_expand(True)
+        self.view.append_column(column_length)
 
         # cellrender for project selection toggle
         rendered_select = Gtk.CellRendererToggle()
