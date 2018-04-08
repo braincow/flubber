@@ -39,7 +39,9 @@ setup(
     name=APP,
     version=pkg['version'],
     description='Flubber is a GTK+ 3 frontend for Watson timetracker',
-    packages=[APP],
+    packages=["flubber", "flubber.dialogs", "flubber.windows"],
+    package_data={"flubber": ['flubber/resources/']},
+    data_files=[('share/applications', ['fi.iki.bcow.flubber.desktop'])],
     author='Antti Peltonen',
     author_email='antti.peltonen@iki.fi',
     license='MIT',
@@ -48,12 +50,12 @@ setup(
     tests_require=parse_requirements('requirements-dev.txt'),
     entry_points={
         'console_scripts': [
-            'flubber = flubber.__main__:gui',
+            'flubber = flubber.__main__',
         ]
     },
     classifiers=[
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        "Development Status :: 1 - Planning",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.6",
         "Operating System :: POSIX",

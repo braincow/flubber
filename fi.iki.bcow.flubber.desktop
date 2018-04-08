@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Comment="Flubber front-end for Watson time tracker"
+Terminal=false
+Name=Flubber
+Exec=/usr/bin/flubber
+Type=Application
+#Icon=iconname.png
+Categories=Application;Productivity;

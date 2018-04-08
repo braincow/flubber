@@ -19,7 +19,7 @@ install:
 	$(PYTHON) setup.py install
 
 .PHONY: check
-check: clean
+check: clean env
 	. "$(VENV_DIR)"/bin/activate; tox
 
 .PHONY: clean
@@ -29,7 +29,7 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -fr *.egg *.egg-info/ .eggs/ .tox/ .pytest_cache/
+	rm -fr *.egg *.egg-info/ .eggs/ .tox/ .pytest_cache/ build/ dist/
 
 .PHONY:
 mostlyclean: clean distclean
@@ -38,3 +38,5 @@ mostlyclean: clean distclean
 run:
 	. "$(VENV_DIR)"/bin/activate; python -m flubber
 
+distribution: check distclean
+	python setup.py sdist
