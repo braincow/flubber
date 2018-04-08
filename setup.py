@@ -42,7 +42,8 @@ setup(
     packages=["flubber", "flubber.dialogs", "flubber.windows"],
     data_files=[
                 ('/usr/share/applications', ['fi.iki.bcow.flubber.desktop']),
-                ('flubber/resources/', ['flubber/resources/menu.xml'])
+                ('flubber/resources/', ['flubber/resources/menu.xml']),
+                ('', ['LICENSE'])
                ],
     author='Antti Peltonen',
     author_email='antti.peltonen@iki.fi',
