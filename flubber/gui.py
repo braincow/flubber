@@ -8,8 +8,10 @@ from flubber.windows import FlubberAppWindow
 class FlubberApp(Gtk.Application):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, application_id="fi.iki.bcow.flubber",
-                         **kwargs)
+        app_id = "fi.iki.bcow.flubber"
+        super(Gtk.Application, self).__init__(*args,
+                                              application_id=app_id,
+                                              **kwargs)
         self.window = None
 
     def do_startup(self):

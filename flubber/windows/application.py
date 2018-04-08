@@ -20,7 +20,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
     welcome_enabled = False
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Gtk.ApplicationWindow, self).__init__(*args, **kwargs)
 
         self.set_default_size(800, 600)
 
@@ -514,7 +514,7 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
         #  change toggle button state based on that
         if wat.is_started:
             self.track_button.set_active(True)
-            status_text = "{}{} {}".format(
+            status_text = "{}{} {}".format(
                             wat.current["project"],
                             beautify_tags(wat.current["tags"]),
                             wat.current['start'].humanize())
