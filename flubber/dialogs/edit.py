@@ -11,10 +11,10 @@ datetime_format = '{} {}'.format(date_format, time_format)
 
 class FlubberEditFrameDialog(Gtk.Dialog):
 
-    # these booleans all need to switch to True state for OK button to release
-    project_validated = False
-    start_date_validated = False
-    end_date_validated = False
+    # these booleans all need to stay in True state for OK button to release
+    project_validated = True
+    start_date_validated = True
+    end_date_validated = True
 
     # these fields contain the parsed datetime object
     parsed_start_datetime = None
@@ -80,24 +80,22 @@ class FlubberEditFrameDialog(Gtk.Dialog):
                             Gtk.PositionType.BOTTOM, 1, 1)
         self.start_entry = Gtk.Entry()
         # prepopulate date text field with frames start time
-        start_pre = self.watson_frame.start.format(datetime_format)
-        self.start_entry.set_text(start_pre)
-        self.on_start_entry_changed(self.start_entry)
         self.start_entry.connect("changed", self.on_start_entry_changed)
         grid.attach_next_to(self.start_entry, start_label,
                             Gtk.PositionType.RIGHT, 1, 1)
+        start_pre = self.watson_frame.start.format(datetime_format)
+        self.start_entry.set_text(start_pre)
         # add label and entry field for end date input
         end_label = Gtk.Label("End date and time")
         grid.attach_next_to(end_label, start_label,
                             Gtk.PositionType.BOTTOM, 1, 1)
         self.end_entry = Gtk.Entry()
         # prepopulate date text field with frames stop time
-        end_pre = self.watson_frame.stop.format(datetime_format)
-        self.end_entry.set_text(end_pre)
-        self.on_end_entry_changed(self.end_entry)
         self.end_entry.connect("changed", self.on_end_entry_changed)
         grid.attach_next_to(self.end_entry, end_label,
                             Gtk.PositionType.RIGHT, 1, 1)
+        end_pre = self.watson_frame.stop.format(datetime_format)
+        self.end_entry.set_text(end_pre)
 
         # page2 of notebook interface is for tag input
         page2 = Gtk.Box()
