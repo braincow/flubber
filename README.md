@@ -4,28 +4,31 @@ Hi, I am Flubber. Your friendly time management utility and a companion for wond
 
 ## Installation
 
-Currently I am lacking fully functional setup.py deployment, "Some assembly required". So I am recommending that if you would like to test me please clone the repository and through Makefile magic prepare my Python virtual environment.
+To install me properly you need also a branched version of Watson as its still lacking a feature from upstream which has not been merged yet. So to install that first:
+
+```
+$ pip uninstall td-watson
+$ git clone https://github.com/braincow/Watson.git
+$ cd Watson
+$ python setup.py install
+```
+
+After (uninstalling and) installing branched version of Watson you are ready to install Flubber:
 
 ```
 $ git clone https://github.com/braincow/flubber.git
 $ cd flubber
-$ make env
+$ python setup.py install
 ```
 
 ## Usage
 
-To run me properly since my installation is still a bit lagging is also trough my Makefile.
-
-```
-$ make run
-```
-
-Warning though: my "add frame" feature requires branched version of Watson since pull request concerning that in Watson has not been approved for upstream yet.
+If installed system wide my .desktop file is also installed into /usr/share/applications and you can start me with your desktop environments application list. If I am not there however you can always execute me via "flubber" command from where setup.py installed my wrapper script (system wide default /usr/bin/)
 
 ## Support
 
-Please open an issue to receive support. Please be mindful that this is currently just only a hobby and learning project so help might never come.
+Please open an issue to receive support and to suggest improvements.
 
 ## Contributing
 
-Fork the project, create a new branch, make your changes, and open a pull request.
+Fork the project, create a new branch, make your changes, and submit a pull request.
