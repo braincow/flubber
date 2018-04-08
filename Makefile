@@ -11,32 +11,26 @@ $(VENV_DIR): requirements-dev.txt
 	$(VENV) $(VENV_ARGS) "$(VENV_DIR)"
 	. "$(VENV_DIR)"/bin/activate; export PYTHONPATH="$(VENV_DIR)"; "$(VENV_DIR)"/bin/pip install -r $<
 
-.PHONY: env
 env: $(VENV_DIR)
 
-.PHONY: install
 install:
 	$(PYTHON) setup.py install
 
-.PHONY: check
-check: clean env
+tox: clean env
 	. "$(VENV_DIR)"/bin/activate; tox
 
-.PHONY: clean
 clean:
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -type d | xargs rm -fr
 
-.PHONY: distclean
 distclean: clean
 	rm -fr *.egg *.egg-info/ .eggs/ .tox/ .pytest_cache/ build/ dist/
 
-.PHONY:
 mostlyclean: clean distclean
 	rm -rf "$(VENV_DIR)"
 
 run:
 	. "$(VENV_DIR)"/bin/activate; python -m flubber
 
-distribution: check distclean
-	python setup.py sdist
+distribution: tox distclean
+	. "$(VENV_DIR)"/bin/activate; python setup.py sdist

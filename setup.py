@@ -40,8 +40,10 @@ setup(
     version=pkg['version'],
     description='Flubber is a GTK+ 3 frontend for Watson timetracker',
     packages=["flubber", "flubber.dialogs", "flubber.windows"],
-    package_data={"flubber": ['flubber/resources/']},
-    data_files=[('share/applications', ['fi.iki.bcow.flubber.desktop'])],
+    data_files=[
+                ('/usr/share/applications', ['fi.iki.bcow.flubber.desktop']),
+                ('flubber/resources/', ['flubber/resources/menu.xml'])
+               ],
     author='Antti Peltonen',
     author_email='antti.peltonen@iki.fi',
     license='MIT',
