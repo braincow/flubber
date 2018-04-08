@@ -50,7 +50,8 @@ class FlubberEditFrameDialog(Gtk.Dialog):
         # we place grid interface to page1
         grid = Gtk.Grid()
         grid.set_column_homogeneous(True)
-        grid.set_row_homogeneous(True)
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
         page1.add(grid)
 
         # Label and combobox for project selection
@@ -104,8 +105,9 @@ class FlubberEditFrameDialog(Gtk.Dialog):
 
         # add grid layout to page2
         grid2 = Gtk.Grid()
-        grid2.set_column_homogeneous(True)
         grid2.set_row_homogeneous(True)
+        grid2.set_column_spacing(10)
+        grid2.set_row_spacing(10)
         page2.add(grid2)
 
         # editable combobox to add existing/new tags to listbox
@@ -137,14 +139,15 @@ class FlubberEditFrameDialog(Gtk.Dialog):
         for tag in self.watson_frame.tags:
             self.selected_tag_store.append([tag, tag])
         self.tag_view = Gtk.TreeView(model=self.selected_tag_store)
-        col = Gtk.TreeViewColumn("Tag", Gtk.CellRendererText(), text=1)
+        col = Gtk.TreeViewColumn("Selected tags", Gtk.CellRendererText(),
+                                 text=1)
         self.tag_view.append_column(col)
         # create a scrollable viewport to prevent dialog borders from expanding
         scrollable_treelist = Gtk.ScrolledWindow()
         scrollable_treelist.set_vexpand(True)
         scrollable_treelist.add(self.tag_view)
         grid2.attach_next_to(scrollable_treelist, self.tag_combo,
-                             Gtk.PositionType.BOTTOM, 1, 3)
+                             Gtk.PositionType.BOTTOM, 1, 5)
         # interface button to delete selected item from list
         self.del_button = Gtk.Button()
         icon = Gio.ThemedIcon(name="list-remove")
