@@ -1,4 +1,4 @@
-from gi.repository import GLib, Gio, Gtk
+from gi.repository import GLib, Gio, Gtk, Notify
 from watson import Watson
 from watson.utils import (
     sorted_groupby, format_timedelta,
@@ -18,6 +18,7 @@ from flubber.util import beautify_tags
 class FlubberAppWindow(Gtk.ApplicationWindow):
 
     welcome_enabled = False
+    notification = None
 
     def __init__(self, *args, **kwargs):
         super(Gtk.ApplicationWindow, self).__init__(*args, **kwargs)
@@ -518,10 +519,27 @@ class FlubberAppWindow(Gtk.ApplicationWindow):
                             wat.current["project"],
                             beautify_tags(wat.current["tags"]),
                             wat.current['start'].humanize())
+            # show info in main window
             self.track_status_label.set_text(status_text)
+            if not self.notification:
+                # also open a notification to Gnome Shell (or relevant)
+                self.notification = Notify.Notification.new("Running project",
+                                                            status_text,
+                                                            "appointment-new")
+                self.notification.show()
+            else:
+                # or update existing
+                self.notification.update("Running project",
+                                         status_text,
+                                         "appointment-new")
         else:
             self.track_button.set_active(False)
+            # update text in main interface
             self.track_status_label.set_text("Idle.")
+            # hide notification from Gnome Shell if still active
+            if self.notification:
+                self.notification.close()
+                self.notification = None
 
         # always return true to make
         #  GLib.timeout_add to reschedule

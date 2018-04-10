@@ -1,7 +1,7 @@
 import sys
 import os
 import signal
-from gi.repository import GLib, Gio, Gtk
+from gi.repository import GLib, Gio, Gtk, Notify
 from flubber.windows import FlubberAppWindow
 
 
@@ -13,6 +13,9 @@ class FlubberApp(Gtk.Application):
                                               application_id=app_id,
                                               **kwargs)
         self.window = None
+
+        # init notification sub system
+        Notify.init("Flubber")
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
