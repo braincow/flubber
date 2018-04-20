@@ -76,6 +76,13 @@ class FlubberAddFrameDialog(Gtk.Dialog):
         self.start_entry.connect("changed", self.on_start_entry_changed)
         grid.attach_next_to(self.start_entry, start_label,
                             Gtk.PositionType.RIGHT, 1, 1)
+        start_date_select_button = Gtk.Button()
+        icon = Gio.ThemedIcon(name="task-due")
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        start_date_select_button.add(image)
+        grid.attach_next_to(start_date_select_button, self.start_entry,
+                             Gtk.PositionType.RIGHT, 1, 1)
+        start_date_select_button.connect("clicked", self.on_select_date_button_clicked)
         # add label and entry field for end date input
         end_label = Gtk.Label("End date and time")
         grid.attach_next_to(end_label, start_label,
@@ -146,6 +153,23 @@ class FlubberAddFrameDialog(Gtk.Dialog):
 
         # show all elements on the dialog
         self.show_all()
+
+    def on_select_date_button_clicked(self, button):
+        popover = Gtk.Popover()
+        popover.set_position(Gtk.PositionType.BOTTOM)
+        popover.set_relative_to(button)
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vbox.add(Gtk.Calendar())
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        hbox.add(Gtk.SpinButton())
+        hbox.add(Gtk.Label(":"))
+        hbox.add(Gtk.SpinButton())
+        hbox.add(Gtk.Label(":"))
+        hbox.add(Gtk.SpinButton())
+        vbox.add(hbox)
+        popover.add(vbox)
+        popover.show_all()
+        popover.popup()
 
     def self_validate(self):
         if False in [self.project_validated,
